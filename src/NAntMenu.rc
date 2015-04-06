@@ -1,0 +1,90 @@
+/* NAntMenu - Version Information
+ * Copyright (C) 2003 Mathias Hasselmann <mathias@taschenorakel.de>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ */
+
+#ifdef APSTUDIO_INVOKED
+#error You have to use a text editor to edit this file
+#endif
+
+#include <windows.h>
+
+#define NANTMENU_MAJOR 0
+#define NANTMENU_MINOR 2
+#define NANTMENU_MICRO 0
+#define NANTMENU_BUILD 0
+#define NANTMENU_VERSION "0.2.0"
+
+#ifndef NDEBUG
+#define NANTMENU_BUILDNOTE "Release"
+#else
+#define NANTMENU_BUILDNOTE "Debug"
+#endif
+
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION NANTMENU_MAJOR,NANTMENU_MINOR,NANTMENU_MICRO,NANTMENU_BUILD
+ PRODUCTVERSION NANTMENU_MAJOR,NANTMENU_MINOR,NANTMENU_MICRO,NANTMENU_BUILD
+ FILEFLAGSMASK 0x3fL
+#ifdef NDEBUG
+ FILEFLAGS 0x0L
+#else
+ FILEFLAGS 0x1L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x2L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "000004e4"
+        BEGIN
+            VALUE "Comments", "This library contains the NAntMenu Shell Extension.\0"
+            VALUE "CompanyName", "http://taschenorakel.de/\0"
+            VALUE "FileDescription", "NAntMenu Shell Extension\0"
+            VALUE "FileVersion", NANTMENU_VERSION
+            VALUE "InternalName", "nantmenu.dll\0"
+            VALUE "LegalCopyright", "Copyright (C) 2003 Mathias Hasselmann\0"
+            VALUE "LegalTrademarks", " \0"
+            VALUE "OriginalFilename", "nantmenu.dll\0"
+            VALUE "PrivateBuild", NANTMENU_BUILDNOTE
+            VALUE "ProductName", "NAntMenu\0"
+            VALUE "ProductVersion", "0.1\0"
+            VALUE "SpecialBuild", " \0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0, 1252
+    END
+END
+
+build ICON "..\\res\\build.ico"
+edit ICON "..\\res\\edit.ico"
+explore ICON "..\\res\\explore.ico"
+help ICON "..\\res\\help.ico"
+nantfile ICON "..\\res\\nantfile.ico"
+shell ICON "..\\res\\shell.ico"
+textfile ICON "..\\res\\textfile.ico"
+
+

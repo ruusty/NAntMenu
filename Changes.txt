@@ -1,0 +1,12 @@
+2003-05-16  Mathias Hasselmann  <mathias@taschenorakel.de>
+
+	* ContextMenu.cpp: Support subtargets as default target
+	* NAntMenu.rc: Added VERSIONINFO resource
+
+=== NAntMenu 0.1 ===
+
+2003-05-15  Mathias Hasselmann  <mathias@taschenorakel.de>
+
+	* Had the idea and implemented it
+	* Initial release
+
