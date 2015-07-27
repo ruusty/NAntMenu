@@ -23,7 +23,7 @@
 
 #include "ContextMenu.h"
 
-#define MODULENAME "NAntMenu.dll"
+#define MODULENAME L##"NAntMenu.dll"
 
 #define CMDINFO(Caption, Verb, Help) \
 { Caption, Verb, Help, L##Caption, L##Verb, L##Help }
@@ -44,11 +44,11 @@
 
 CNAntCommand CNAntContextMenu::commands[] =
 {
-	CMDINFO("Edit", "NAntMenuEdit", 
+	CMDINFO("Edit", "NAntMenuEdit",
 		"Edit this build script"),
-	CMDINFO("Explore", "NAntMenuBrowse", 
+	CMDINFO("Explore", "NAntMenuBrowse",
 		"Explore the project's folder"),
-	CMDINFO("Command Prompt", "NAntMenuShell", 
+	CMDINFO("Command Prompt", "NAntMenuShell",
 		"Open a command prompt for the project's folder"),
 	CMDINFO("Help", "NAntMenuHelp",
 		"Display help files for NAnt"),
@@ -78,7 +78,7 @@ CNAntContextMenu::UpdateRegistry(BOOL bRegister)
 		NULL == (module = GetModuleHandle(MODULENAME)) ||
 		!GetModuleFileName(module, filename, sizeof(filename)))
 	{
-		MessageBox(0, "Cannot locate " MODULENAME ".", 0, 0);
+		MessageBox(0, L"Cannot locate " MODULENAME L".", 0, 0);
 		return HRESULT_FROM_WIN32(GetLastError());
 	}
 
@@ -93,13 +93,13 @@ CNAntContextMenu::UpdateRegistry(BOOL bRegister)
 		bstr_t nClass(bstr_t("CLSID\\") + clsid);
 
 		if (Failed(rClass.Create(HKEY_CLASSES_ROOT, nClass)) ||
-			Failed(rClass.SetStringValue(NULL, "NAntMenu Shell Extension")) ||
-				
-			Failed(rInProc.Create(rClass, "InprocServer32")) ||
+			Failed(rClass.SetStringValue(NULL, L"NAntMenu Shell Extension")) ||
+
+			Failed(rInProc.Create(rClass, L"InprocServer32")) ||
 			Failed(rInProc.SetStringValue(NULL, filename)) ||
-			Failed(rInProc.SetStringValue("ThreadingModel", "Apartment")))
+			Failed(rInProc.SetStringValue(L"ThreadingModel", L"Apartment")))
 		{
-			MessageBox(0, "Cannot register COM object.", 0, 0);
+			MessageBox(0, L"Cannot register COM object.", 0, 0);
 			return HRESULT_FROM_WIN32(GetLastError());
 		}
 
@@ -110,28 +110,28 @@ CNAntContextMenu::UpdateRegistry(BOOL bRegister)
 		CRegKey rNAntScript;
 		CRegKey rDefaultIcon;
 		CRegKey rNAntMenu;
-		
+
 		bstr_t defaultIcon(bstr_t(filename) + ",0");
 
-		if (Failed(rDotBuild.Create(HKEY_CLASSES_ROOT, ".build")) ||
-			Failed(rDotBuild.SetStringValue(NULL, "NAntBuildScript")) ||
-			
-			Failed(rNAntScript.Create(HKEY_CLASSES_ROOT, "NAntBuildScript")) ||
-			Failed(rNAntScript.SetStringValue(NULL, "NAnt Build Script")) ||
-			Failed(rDefaultIcon.Create(rNAntScript, "DefaultIcon")) ||
+		if (Failed(rDotBuild.Create(HKEY_CLASSES_ROOT, L".build")) ||
+			Failed(rDotBuild.SetStringValue(NULL, L"NAntBuildScript")) ||
+
+			Failed(rNAntScript.Create(HKEY_CLASSES_ROOT, L"NAntBuildScript")) ||
+			Failed(rNAntScript.SetStringValue(NULL, L"NAnt Build Script")) ||
+			Failed(rDefaultIcon.Create(rNAntScript, L"DefaultIcon")) ||
 			Failed(rDefaultIcon.SetStringValue(NULL, defaultIcon)) ||
 
-			Failed(rNAntMenu.Create(rNAntScript, 
-				"shellex\\ContextMenuHandlers\\NAntMenu")) ||
+			Failed(rNAntMenu.Create(rNAntScript,
+				L"shellex\\ContextMenuHandlers\\NAntMenu")) ||
 			Failed(rNAntMenu.SetStringValue(NULL, bstr_t(clsid))))
 		{
-			MessageBox(0, "Cannot register file type.", 0, 0);
+			MessageBox(0, L"Cannot register file type.", 0, 0);
 			return HRESULT_FROM_WIN32(GetLastError());
 		}
 	}
 	else
 	{
-		MessageBox(0, "Not implemented.", 0, 0);
+		MessageBox(0, L"Not implemented.", 0, 0);
 		return E_NOTIMPL;
 	}
 
@@ -141,13 +141,13 @@ CNAntContextMenu::UpdateRegistry(BOOL bRegister)
 HRESULT CNAntContextMenu::LoadScript(LPCTSTR filename)
 {
 	HRESULT result = S_OK;
-	
+
 	if (!this->script)
 		result = this->script.CoCreateInstance(L"Msxml2.DOMDocument");
 
 	this->targetCount = 0;
 	this->defaultTarget = 0;
-	
+
 	if (!this->targets)
 	{
 		CNAntTarget * t = targets;
@@ -158,16 +158,16 @@ HRESULT CNAntContextMenu::LoadScript(LPCTSTR filename)
 	VARIANT_BOOL scriptLoaded;
 	CComPtr<IXMLDOMElement> project;
 	variant_t defaultTarget;
-	
+
 	CComPtr<IXMLDOMNodeList> targetList;
 
-	if (SUCCEEDED(result) && 
+	if (SUCCEEDED(result) &&
 		SUCCEEDED(result = this->script->load(
 			variant_t(filename), &scriptLoaded)) && scriptLoaded &&
 		SUCCEEDED(this->script->get_documentElement(&project)) && project &&
 		SUCCEEDED(project->getAttribute(bstr_t("default"), &defaultTarget)) &&
 		SUCCEEDED(this->script->selectNodes(
-			bstr_t("/project/target[@description]"), 
+			bstr_t("/project/target[@description]"),
 			&targetList)) &&
 		SUCCEEDED(targetList->get_length(&this->targetCount)))
 	{
@@ -189,7 +189,7 @@ HRESULT CNAntContextMenu::LoadScript(LPCTSTR filename)
 
 			if (!this->defaultTarget && first->name == defaultTargetName)
 				this->defaultTarget = first;
-			
+
 			first++;
 		}
 
@@ -197,22 +197,22 @@ HRESULT CNAntContextMenu::LoadScript(LPCTSTR filename)
 		{
 			this->defaultTarget = this->targets + this->targetCount;
 			first->name = defaultTargetName;
-			first->desc = "Build the default target";
+			first->desc = L"Build the default target";
 		}
 	}
-	
+
 	return result;
 }
 
 HRESULT STDMETHODCALLTYPE
-CNAntContextMenu::Initialize(LPCITEMIDLIST pidlFolder, 
+CNAntContextMenu::Initialize(LPCITEMIDLIST pidlFolder,
 	LPDATAOBJECT dataObject, HKEY hkeyProgID)
 {
 	HRESULT result = E_FAIL;
 
 	if (dataObject)
 	{
-  		FORMATETC format = 
+  		FORMATETC format =
 		{
 			CF_HDROP,  NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL
 		};
@@ -225,7 +225,7 @@ CNAntContextMenu::Initialize(LPCITEMIDLIST pidlFolder,
 			HDROP hDrop = HDROP(GlobalLock(medium.hGlobal));
 
 			if (1 == DragQueryFile(hDrop, 0xFFFFFFFF, NULL, 0) &&
-				0 != DragQueryFile(hDrop, 0, this->filename, 
+				0 != DragQueryFile(hDrop, 0, this->filename,
 					sizeof(this->filename)))
 			{
 				result = this->LoadScript(this->filename);
@@ -239,24 +239,24 @@ CNAntContextMenu::Initialize(LPCITEMIDLIST pidlFolder,
 			HMODULE module = GetModuleHandle(MODULENAME);
 			const INT icx = GetSystemMetrics(SM_CXSMICON);
 			const INT icy = GetSystemMetrics(SM_CXSMICON);
-			
+
 			this->hIcons[IdCmd_Edit] =
-				HICON(LoadImage(module, "edit", IMAGE_ICON, icx, icy, 0));
+				HICON(LoadImage(module, L"edit", IMAGE_ICON, icx, icy, 0));
 			this->hIcons[IdCmd_Browse] =
-				HICON(LoadImage(module, "explore", IMAGE_ICON, icx, icy, 0));
-			this->hIcons[IdCmd_Shell] = 
-				HICON(LoadImage(module, "shell", IMAGE_ICON, icx, icy, 0));
-			this->hIcons[IdCmd_Help] = 
-				HICON(LoadImage(module, "help", IMAGE_ICON, icx, icy, 0));
-			this->hIcons[IdCmd_Default] = 
-				HICON(LoadImage(module, "build", IMAGE_ICON, icx, icy, 0));
+				HICON(LoadImage(module, L"explore", IMAGE_ICON, icx, icy, 0));
+			this->hIcons[IdCmd_Shell] =
+				HICON(LoadImage(module, L"shell", IMAGE_ICON, icx, icy, 0));
+			this->hIcons[IdCmd_Help] =
+				HICON(LoadImage(module, L"help", IMAGE_ICON, icx, icy, 0));
+			this->hIcons[IdCmd_Default] =
+				HICON(LoadImage(module, L"build", IMAGE_ICON, icx, icy, 0));
 
 			GlobalUnlock(hDrop);
 			GlobalFree(medium.hGlobal);
 		}
 	}
 
-	
+
 	return result;
 }
 
@@ -267,10 +267,10 @@ static  BOOL MenuItemSetDefault(HMENU hMenu, UINT uItem,
 	memset(&itemInfo, 0, sizeof(itemInfo));
 	itemInfo.cbSize = sizeof(itemInfo);
 	itemInfo.fMask = MIIM_STATE;
-	
+
 	if (GetMenuItemInfo(hMenu, uItem, fByPosition, &itemInfo))
 	{
-		itemInfo.fState = fDefault ? 
+		itemInfo.fState = fDefault ?
 			itemInfo.fState | MFS_DEFAULT :
 			itemInfo.fState & ~MFS_DEFAULT;
 		return SetMenuItemInfo(hMenu, uItem, fByPosition, &itemInfo);
@@ -291,9 +291,9 @@ CNAntContextMenu::QueryContextMenu(HMENU hMenu, UINT indexMenu,
 		CNAntTarget const * first = this->targets;
 		CNAntTarget const * const last = first + this->targetCount;
 
-		while (first < last && 
+		while (first < last &&
 			AppendMenu(hPopup, MF_STRING, idCmdFirst, first->name) &&
-			MenuItemSetDefault(hPopup, idCmdFirst, FALSE, 
+			MenuItemSetDefault(hPopup, idCmdFirst, FALSE,
 				first == this->defaultTarget))
 		{
 			idCmdFirst++;
@@ -306,9 +306,9 @@ CNAntContextMenu::QueryContextMenu(HMENU hMenu, UINT indexMenu,
 		AppendMenu(hPopup, MF_OWNERDRAW | MF_STRING, idCmdFirst++, T("&Shell"));
 		AppendMenu(hPopup, MF_SEPARATOR, 0, NULL);
 		AppendMenu(hPopup, MF_OWNERDRAW | MF_STRING, idCmdFirst++, T("&Help"));
-			
-		if (!InsertMenu(hMenu, indexMenu, 
-			 MF_BYPOSITION | MF_STRING | MF_POPUP, 
+
+		if (!InsertMenu(hMenu, indexMenu,
+			 MF_BYPOSITION | MF_STRING | MF_POPUP,
 			 UINT_PTR(hPopup), T("NAnt")))
 			return HRESULT_FROM_WIN32(GetLastError());
 
@@ -367,12 +367,13 @@ inline LPCWSTR GetVerbW(const CNAntCommand & cmdInfo)
 	return cmdInfo.wcsVerb;
 }
 
-template <class CharType> 
+template <class CharType>
 HRESULT CNAntContextMenu::CopyHelpString(UINT idCmd,
 	CharType * (*copyFunc)(CharType *, const CharType *, UINT),
 	bstr_t (*targetFunc)(const CNAntTarget & target),
 	const CharType * (*sourceFunc)(const CNAntCommand & cmdInfo),
-	CharType * strBuf, UINT cchMax)
+	CharType * strBuf,
+    UINT cchMax)
 {
 	if (idCmd < this->targetCount)
 	{
@@ -397,30 +398,25 @@ HRESULT STDMETHODCALLTYPE CNAntContextMenu::GetCommandString(
 	UINT idCmd, UINT uType, UINT * pwReserved, LPSTR pszName, UINT cchMax)
 {
 	LPWSTR pwszName = LPWSTR(pszName);
-
 	switch(uType)
 	{
 		case GCS_VALIDATEA:
 		case GCS_VALIDATEW:
-			return idCmd >= this->idCmdFirst && 
-				idCmd < this->idCmdFirst + this->targetCount + 2 ? 
+			return idCmd >= this->idCmdFirst &&
+				idCmd < this->idCmdFirst + this->targetCount + 2 ?
 				S_OK : S_FALSE;
 
 		case GCS_HELPTEXTA:
-			return this->CopyHelpString(idCmd, strncpy,
-				GetDescription, GetHelpA, pszName, cchMax);
+			return this->CopyHelpString(idCmd, strncpy_s, GetDescription, GetHelpA, pszName, cchMax);
 
 		case GCS_HELPTEXTW:
-			return this->CopyHelpString(idCmd, wcsncpy, 
-				GetDescription, GetHelpW, pwszName, cchMax);
+			return this->CopyHelpString(idCmd, wcsncpy_s, GetDescription, GetHelpW, pwszName, cchMax);
 
 		case GCS_VERBA:
-			return this->CopyHelpString(idCmd, strncpy, 
-				GetVerb, GetVerbA, pszName, cchMax);
+			return this->CopyHelpString(idCmd, strncpy_s, GetVerb, GetVerbA, pszName, cchMax);
 
 		case GCS_VERBW:
-			return this->CopyHelpString(idCmd, wcsncpy, 
-				GetVerb, GetVerbW, pwszName, cchMax);
+			return this->CopyHelpString(idCmd, wcsncpy_s, GetVerb, GetVerbW, pwszName, cchMax);
 	}
 	return E_FAIL;
 }
@@ -435,14 +431,14 @@ HRESULT CNAntContextMenu::BuildTarget(const CNAntTarget & target)
 	{
 		*filename++ = '\0';
 
-		bstr_t cmdline = 
-			"/c title NAnt - " + target.name + " - " + filename + 
+		bstr_t cmdline =
+			"/c title NAnt - " + target.name + " - " + filename +
 			" && nant -buildfile:\"" + filename + "\" " + target.name +
 			" && pause || pause";
 
 		ShellExecute(NULL, T("open"), T("cmd.exe"),
 			cmdline, path, SW_SHOWNORMAL);
-		
+
 		return S_OK;
 	}
 
@@ -454,11 +450,12 @@ HRESULT STDMETHODCALLTYPE CNAntContextMenu::InvokeCommand(
 {
 	if (HIWORD(lpici->lpVerb))
 	{
-		MessageBox(0, lpici->lpVerb, __FUNCTION__, 0);
+		MessageBox(0, lpici->lpVerb, __FUNCTION__, 0);//TODO:
 	}
 	else
 	{
-		UINT idCmd = LOWORD(lpici->lpVerb);
+		//UINT idCmd = LOWORD(lpici->lpVerb);
+        LONG idCmd = LOWORD(lpici->lpVerb);
 
 		if (idCmd < this->targetCount)
 		{
@@ -507,24 +504,24 @@ HRESULT STDMETHODCALLTYPE CNAntContextMenu::InvokeCommand(
 					if (ExpandEnvironmentStrings(
 							T("%PROGRAMFILES%\\nant\\doc\\help\\index.html"),
 							path, sizeof(path)) &&
-						ShellExecute(NULL, T("open"), path, 
+						ShellExecute(NULL, T("open"), path,
 							NULL, NULL, SW_SHOWNORMAL))
 						return S_OK;
 
 					return HRESULT_FROM_WIN32(GetLastError());
-					
+
 				case IdCmd_Default:
 					if (this->defaultTarget)
 						return this->BuildTarget(*this->defaultTarget);
-					
+
 					break;
 			}
 		}
 	}
-	
+
 	return E_FAIL;
 }
-	
+
 HRESULT STDMETHODCALLTYPE CNAntContextMenu::HandleMenuMsg(
 	UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -532,7 +529,7 @@ HRESULT STDMETHODCALLTYPE CNAntContextMenu::HandleMenuMsg(
 	return this->HandleMenuMsg2(uMsg, wParam, lParam, &noResult);
 }
 
-HRESULT STDMETHODCALLTYPE CNAntContextMenu::HandleMenuMsg2(UINT uMsg, 
+HRESULT STDMETHODCALLTYPE CNAntContextMenu::HandleMenuMsg2(UINT uMsg,
 	WPARAM wParam, LPARAM lParam, LRESULT * plResult)
 {
 	if (NULL == plResult)
@@ -556,17 +553,17 @@ HRESULT STDMETHODCALLTYPE CNAntContextMenu::HandleMenuMsg2(UINT uMsg,
 				HMENU(lParam), LOWORD(wParam), HIWORD(wParam), *plResult);
 	}
 
-	char str[100]; 
-	wsprintf(str, "Unexpected uMsg in HandleMenuMsg2: %d", uMsg);
+	wchar_t str[100];
+	wsprintf(str, L"Unexpected uMsg in HandleMenuMsg2: %d", uMsg);
 	MessageBox(0, str, 0, 0);
-	
+
 	return E_NOTIMPL;
 }
 
 LPCTSTR CNAntContextMenu::GetMenuCaption(UINT itemId, HICON * hIcon)
 {
 	UINT cmdId = itemId - this->idCmdFirst;
-	
+
 	if (cmdId < this->targetCount)
 	{
 		if (hIcon) *hIcon = this->hIcons[IdCmd_Default];
@@ -574,7 +571,7 @@ LPCTSTR CNAntContextMenu::GetMenuCaption(UINT itemId, HICON * hIcon)
 	}
 
 	cmdId-= this->targetCount;
-	
+
 	if (cmdId < IdCmd_Last)
 	{
 		if (hIcon) *hIcon = this->hIcons[cmdId];
@@ -582,7 +579,7 @@ LPCTSTR CNAntContextMenu::GetMenuCaption(UINT itemId, HICON * hIcon)
 	}
 
 	if (hIcon) *hIcon = NULL;
-	return "Unknown item";
+	return L"Unknown item";
 }
 
 HRESULT CNAntContextMenu::DrawItem(
@@ -595,11 +592,11 @@ HRESULT CNAntContextMenu::DrawItem(
 	{
 		COLORREF crText = GetTextColor(pDrawItem->hDC);
 		COLORREF crBkgnd = GetBkColor(pDrawItem->hDC);
-		
+
 		if (pDrawItem->itemState & ODS_SELECTED)
 		{
-			crText = SetTextColor(pDrawItem->hDC, 
-				GetSysColor(pDrawItem->itemState & ODS_GRAYED ? 
+			crText = SetTextColor(pDrawItem->hDC,
+				GetSysColor(pDrawItem->itemState & ODS_GRAYED ?
 				COLOR_GRAYTEXT : COLOR_HIGHLIGHTTEXT));
 			SetBkColor(pDrawItem->hDC, GetSysColor(COLOR_HIGHLIGHT));
 		}
@@ -624,7 +621,7 @@ HRESULT CNAntContextMenu::DrawItem(
 
 		rc.left+= wi;
 
-		DrawText(pDrawItem->hDC, caption, -1, &rc, 
+		DrawText(pDrawItem->hDC, caption, -1, &rc,
 			DT_SINGLELINE | DT_LEFT | DT_VCENTER);
 	}
 
@@ -637,14 +634,14 @@ HRESULT CNAntContextMenu::MeasureItem(
 	if (NULL == pMeasureItem)
 		return E_INVALIDARG;
 
-	RECT rc;	
+	RECT rc;
 	LPCTSTR caption = this->GetMenuCaption(pMeasureItem->itemID);
 
 	if (DrawText(GetDC(NULL), caption, -1, &rc, DT_SINGLELINE | DT_CALCRECT))
 	{
 		pMeasureItem->itemWidth = rc.right - rc.left + 1;
 		pMeasureItem->itemHeight = rc.bottom - rc.top + 1;
-		
+
 		return NOERROR;
 	}
 

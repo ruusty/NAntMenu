@@ -22,15 +22,18 @@
  */
 
 #pragma once
+#define UNICODE=1
 
 #include <atlbase.h>
+
+#include "Strsafe.h"
 #include <atlcom.h>
 #include <comdef.h>
 #include <shlobj.h>
 #include <msxml2.h>
 
 //2A57BF13-CB2B-4769-B18C4133153F8D28
-DEFINE_GUID(CLSID_CNAntContextMenu, 
+DEFINE_GUID(CLSID_CNAntContextMenu,
 0x2A57BF13, 0xCB2B, 0x4769, 0xB1, 0x8C, 0x41, 0x33, 0x15, 0x3F, 0x8D, 0x28);
 
 struct CNAntTarget
@@ -77,17 +80,17 @@ protected:
 	HRESULT BuildTarget(const CNAntTarget & target);
 
 	template <class CharType>
-	HRESULT CopyHelpString(UINT idCmd, 
+	HRESULT CopyHelpString(UINT idCmd,
 		CharType * (*copyFunc)(CharType *, const CharType *, UINT),
 		bstr_t (*targetFunc)(const CNAntTarget & target),
 		const CharType * (*sourceFunc)(const CNAntCommand & cmdInfo),
 		CharType * strBuf, UINT cchMax);
 	LPCTSTR GetMenuCaption(UINT itemId, HICON * hIcon = NULL);
-	
+
 public:
-	CNAntContextMenu(): 
+	CNAntContextMenu():
 		targetCount(0), targets(0), defaultTarget(0) {}
-	
+
 	BEGIN_COM_MAP(CNAntContextMenu)
 		COM_INTERFACE_ENTRY(IShellExtInit)
 		COM_INTERFACE_ENTRY(IContextMenu3)
@@ -103,12 +106,12 @@ public:
 	// IShellExtInit
 
 public:
-	STDMETHOD(Initialize)(LPCITEMIDLIST pidlFolder, 
+	STDMETHOD(Initialize)(LPCITEMIDLIST pidlFolder,
 		LPDATAOBJECT dataObject, HKEY hkeyProgID);
 
 	/////////////////////////////
 	// IContextMenu
-  
+
 public:
 	STDMETHOD(QueryContextMenu)(HMENU hMenu, UINT indexMenu,
 		UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
@@ -130,7 +133,7 @@ private:
 	// IContextMenu3
 
 public:
-	STDMETHOD(HandleMenuMsg2)(UINT uMsg, 
+	STDMETHOD(HandleMenuMsg2)(UINT uMsg,
 		WPARAM wParam, LPARAM lParam, LRESULT * plResult);
 	HRESULT OnMenuChar(HMENU hMenu, WORD type, WORD charcode, LRESULT & result);
 };

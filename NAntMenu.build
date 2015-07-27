@@ -1,19 +1,19 @@
 <?xml version='1.0'?>
 
-<!-- 
+<!--
  ! Build script for the NAntMenu Shell Extension
  ! Copyrigth 2003 Mathias Hasselmann
  !-->
 
 <project name='NAntMenu' default='build'>
- <property name='vc7dir' value='C:\Programme\Microsoft Visual Studio .NET\Vc7'/>
- <property name='mfcinc' value='${vc7dir}\atlmfc\include'/>
- <property name='mfclib' value='${vc7dir}\atlmfc\lib'/>
- <property name='w32inc' value='${vc7dir}\PlatformSDK\Include'/>
- <property name='w32lib' value='${vc7dir}\PlatformSDK\lib'/>
+ <property name='vc12dir' value='C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC'/>
+ <property name='mfcinc' value='${vc12dir}\atlmfc\include'/>
+ <property name='mfclib' value='${vc12dir}\atlmfc\lib\amd64'/>
+ <property name='w32inc' value='${vc12dir}\PlatformSDK\Include'/>
+ <property name='w32lib' value='${vc12dir}\lib\amd64'/>
 
- <property name='package' value='${nant.project.name}'/>
- <property name='version' value='0.2.0'/>
+ <property name='package' value='${project::get-name()}'/>
+ <property name='version' value='0.2.10'/>
 
  <property name='srcdir' value='src'/>
  <property name='resdir' value='res'/>
@@ -36,22 +36,22 @@
   <mkdir dir='${bindir}'/>
   <mkdir dir='${pkgdir}'/>
  </target>
- 
+
  <target name='clean'
   description='Removes all the generated files'>
   <delete failonerror='false' verbose='true'>
    <fileset defaultexcludes='false'>
-    <includes name='${objdir}\'/>
-    <includes name='${bindir}\'/>
-    <includes name='${pkgdir}\'/>
-    <includes name='${output}'/>
-    <includes name='*.exp'/>
-    <includes name='*.lib'/>
-    <includes name='**~'/>
+    <include name='${objdir}\'/>
+    <include name='${bindir}\'/>
+    <include name='${pkgdir}\'/>
+    <include name='${output}'/>
+    <include name='*.exp'/>
+    <include name='*.lib'/>
+    <include name='**~'/>
    </fileset>
   </delete>
  </target>
- 
+
  <target name='package' depends='source-package binary-package'
   description='Builds the distribution files'/>
 
@@ -59,20 +59,20 @@
   <zip zipfile='${pkgdir}\${package}-${version}.src.zip'
    comment='Sourcecode version of ${package} ${version}'>
    <fileset>
-    <includes name='*.txt'/>
-    <includes name='*.build'/>
-    <includes name='${srcdir}/*'/>
-    <includes name='${resdir}/*'/>
+    <include name='*.txt'/>
+    <include name='*.build'/>
+    <include name='${srcdir}/*'/>
+    <include name='${resdir}/*'/>
    </fileset>
   </zip>
  </target>
 
  <target name='binary-package' depends='build'>
-  <zip zipfile='${pkgdir}\${package}-${version}.x86.zip'
+  <zip zipfile='${pkgdir}\${package}-${version}.zip'
    comment='Precompiled version of ${package} ${version}'>
    <fileset>
-    <includes name='*.txt'/>
-    <includes name='${bindir}/*'/>
+    <include name='*.txt'/>
+    <include name='${bindir}/*'/>
    </fileset>
   </zip>
  </target>
@@ -81,54 +81,38 @@
   description='Registers the NAntMenu shell extension'>
   <exec program='regsvr32' commandline='${output}'/>
  </target>
- 
+
  <target name='unregister' depends='build'
   description='Unregisters the NAntMenu shell extension'>
   <exec program='regsvr32' commandline='/u ${output}'/>
  </target>
 
  <target name='compile' depends='prepare'>
-  <if uptodatefile='${dllres}'>
-   <comparefiles>
-    <includes name='${dllrcs}'/>
-   </comparefiles>
-
    <exec program='rc' commandline='/I"${w32inc}" /FO"${dllres}" "${dllrcs}"'/>
-  </if>
-	
-  <if uptodatefile='${objdir}\DllExports.obj'>
-   <comparefiles>
-    <includes name='${srcdir}\*.cpp'/>
-    <includes name='${srcdir}\*.h'/>
-   </comparefiles>
-   
+
    <cl outputdir='${objdir}' options='/LD /I"${mfcinc}" /I"${w32inc}"'>
     <sources>
-     <includes name='${srcdir}\*.cpp'/>
+     <include name='${srcdir}\*.cpp'/>
     </sources>
+    <defines>
+        <define name="_UNICODE" />
+        <define name="UNICODE" />
+    </defines>
    </cl>
-  </if>
  </target>
-    
+
  <target name='link' depends='compile'>
-  <if uptodatefile='${output}'>
-   <comparefiles>
-    <includes name='${dlldef}'/>
-    <includes name='${objdir}\*.obj'/>
-    <includes name='${objdir}\*.res'/>
-   </comparefiles>
-   
    <link output='${output}' options='/DLL /DEF:${dlldef}'>
     <sources>
-     <includes name='${objdir}\*.obj'/>
-     <includes name='${objdir}\*.res'/>
+     <include name='${objdir}\*.obj'/>
+     <include name='${objdir}\*.res'/>
     </sources><libdirs>
-     <includes name='${mfclib}'/>
-     <includes name='${w32lib}'/>
+     <include name='${mfclib}'/>
+     <include name='${w32lib}'/>
     </libdirs>
    </link>
-  </if>
  </target>
+
 </project>
 
 <!-- vim: set ts=8: set sw=1: -->
