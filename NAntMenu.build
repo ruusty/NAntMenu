@@ -5,7 +5,7 @@
  ! Copyrigth 2003 Mathias Hasselmann
  !-->
 
-<project name='NAntMenu' default='build'>
+<project name='NAntMenu' default='rebuild'>
  <property name='vc12dir' value='C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC'/>
  <property name='mfcinc' value='${vc12dir}\atlmfc\include'/>
  <property name='mfclib' value='${vc12dir}\atlmfc\lib\amd64'/>
@@ -13,7 +13,7 @@
  <property name='w32lib' value='${vc12dir}\lib\amd64'/>
 
  <property name='package' value='${project::get-name()}'/>
- <property name='version' value='0.2.10'/>
+ <property name='version' value='0.3.0'/>
 
  <property name='srcdir' value='src'/>
  <property name='resdir' value='res'/>
@@ -106,7 +106,8 @@
     <sources>
      <include name='${objdir}\*.obj'/>
      <include name='${objdir}\*.res'/>
-    </sources><libdirs>
+    </sources>
+    <libdirs>
      <include name='${mfclib}'/>
      <include name='${w32lib}'/>
     </libdirs>

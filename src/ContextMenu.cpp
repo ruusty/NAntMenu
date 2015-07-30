@@ -44,16 +44,11 @@
 
 CNAntCommand CNAntContextMenu::commands[] =
 {
-	CMDINFO("Edit", "NAntMenuEdit",
-		"Edit this build script"),
-	CMDINFO("Explore", "NAntMenuBrowse",
-		"Explore the project's folder"),
-	CMDINFO("Command Prompt", "NAntMenuShell",
-		"Open a command prompt for the project's folder"),
-	CMDINFO("Help", "NAntMenuHelp",
-		"Display help files for NAnt"),
-	CMDINFO("Default", "NAntMenuDefault",
-		"Build the project's default target")
+	CMDINFO("Edit",            "NAntMenuEdit"    ,"Edit this build script"),
+	CMDINFO("Explore",         "NAntMenuBrowse"  ,"Explore the project's folder"),
+	CMDINFO("Command Prompt",  "NAntMenuShell"   ,"Open a command prompt for the project's folder"),
+	CMDINFO("Help",            "NAntMenuHelp"    ,"Display help files for NAnt"),
+	CMDINFO("Default",         "NAntMenuDefault" ,"Build the project's default target")
 };
 
 static bool Failed(LONG result)
@@ -115,14 +110,11 @@ CNAntContextMenu::UpdateRegistry(BOOL bRegister)
 
 		if (Failed(rDotBuild.Create(HKEY_CLASSES_ROOT, L".build")) ||
 			Failed(rDotBuild.SetStringValue(NULL, L"NAntBuildScript")) ||
-
 			Failed(rNAntScript.Create(HKEY_CLASSES_ROOT, L"NAntBuildScript")) ||
 			Failed(rNAntScript.SetStringValue(NULL, L"NAnt Build Script")) ||
 			Failed(rDefaultIcon.Create(rNAntScript, L"DefaultIcon")) ||
 			Failed(rDefaultIcon.SetStringValue(NULL, defaultIcon)) ||
-
-			Failed(rNAntMenu.Create(rNAntScript,
-				L"shellex\\ContextMenuHandlers\\NAntMenu")) ||
+			Failed(rNAntMenu.Create(rNAntScript, L"shellex\\ContextMenuHandlers\\NAntMenu")) ||
 			Failed(rNAntMenu.SetStringValue(NULL, bstr_t(clsid))))
 		{
 			MessageBox(0, L"Cannot register file type.", 0, 0);
@@ -131,7 +123,7 @@ CNAntContextMenu::UpdateRegistry(BOOL bRegister)
 	}
 	else
 	{
-		MessageBox(0, L"Not implemented.", 0, 0);
+		MessageBox(0, L"Not implemented.", 0, 0); //TODO
 		return E_NOTIMPL;
 	}
 
@@ -162,13 +154,10 @@ HRESULT CNAntContextMenu::LoadScript(LPCTSTR filename)
 	CComPtr<IXMLDOMNodeList> targetList;
 
 	if (SUCCEEDED(result) &&
-		SUCCEEDED(result = this->script->load(
-			variant_t(filename), &scriptLoaded)) && scriptLoaded &&
+		SUCCEEDED(result = this->script->load(variant_t(filename), &scriptLoaded)) && scriptLoaded &&
 		SUCCEEDED(this->script->get_documentElement(&project)) && project &&
 		SUCCEEDED(project->getAttribute(bstr_t("default"), &defaultTarget)) &&
-		SUCCEEDED(this->script->selectNodes(
-			bstr_t("/project/target[@description]"),
-			&targetList)) &&
+		SUCCEEDED(this->script->selectNodes(bstr_t("/project/target[@description]"),&targetList)) &&
 		SUCCEEDED(targetList->get_length(&this->targetCount)))
 	{
 		bstr_t defaultTargetName(defaultTarget);
@@ -240,16 +229,11 @@ CNAntContextMenu::Initialize(LPCITEMIDLIST pidlFolder,
 			const INT icx = GetSystemMetrics(SM_CXSMICON);
 			const INT icy = GetSystemMetrics(SM_CXSMICON);
 
-			this->hIcons[IdCmd_Edit] =
-				HICON(LoadImage(module, L"edit", IMAGE_ICON, icx, icy, 0));
-			this->hIcons[IdCmd_Browse] =
-				HICON(LoadImage(module, L"explore", IMAGE_ICON, icx, icy, 0));
-			this->hIcons[IdCmd_Shell] =
-				HICON(LoadImage(module, L"shell", IMAGE_ICON, icx, icy, 0));
-			this->hIcons[IdCmd_Help] =
-				HICON(LoadImage(module, L"help", IMAGE_ICON, icx, icy, 0));
-			this->hIcons[IdCmd_Default] =
-				HICON(LoadImage(module, L"build", IMAGE_ICON, icx, icy, 0));
+			this->hIcons[IdCmd_Edit] =   HICON(LoadImage(module, L"edit", IMAGE_ICON, icx, icy, 0));
+			this->hIcons[IdCmd_Browse] = HICON(LoadImage(module, L"explore", IMAGE_ICON, icx, icy, 0));
+			this->hIcons[IdCmd_Shell] =  HICON(LoadImage(module, L"shell", IMAGE_ICON, icx, icy, 0));
+			this->hIcons[IdCmd_Help] =   HICON(LoadImage(module, L"help", IMAGE_ICON, icx, icy, 0));
+			this->hIcons[IdCmd_Default] =HICON(LoadImage(module, L"build", IMAGE_ICON, icx, icy, 0));
 
 			GlobalUnlock(hDrop);
 			GlobalFree(medium.hGlobal);
@@ -369,7 +353,7 @@ inline LPCWSTR GetVerbW(const CNAntCommand & cmdInfo)
 
 template <class CharType>
 HRESULT CNAntContextMenu::CopyHelpString(UINT idCmd,
-	CharType * (*copyFunc)(CharType *, const CharType *, UINT),
+	HRESULT (*copyFunc)(CharType *, size_t, const CharType *),
 	bstr_t (*targetFunc)(const CNAntTarget & target),
 	const CharType * (*sourceFunc)(const CNAntCommand & cmdInfo),
 	CharType * strBuf,
@@ -377,25 +361,25 @@ HRESULT CNAntContextMenu::CopyHelpString(UINT idCmd,
 {
 	if (idCmd < this->targetCount)
 	{
-		copyFunc(strBuf, targetFunc(this->targets[idCmd]), cchMax - 1);
-		strBuf[cchMax - 1] = '\0';
-		return S_OK;
+        HRESULT hResult = copyFunc(strBuf, cchMax, targetFunc(this->targets[idCmd]));
+		//strBuf[cchMax - 1] = '\0';
+		return hResult;
 	}
 
 	idCmd-= this->targetCount;
 
 	if (idCmd < IdCmd_Last)
 	{
-		copyFunc(strBuf, sourceFunc(commands[idCmd]), cchMax - 1);
-		strBuf[cchMax - 1] = '\0';
-		return S_OK;
+		HRESULT hResult = copyFunc(strBuf,  cchMax, sourceFunc(commands[idCmd]));
+		//strBuf[cchMax - 1] = '\0';
+		return hResult;
 	}
 
 	return E_FAIL;
 }
 
 HRESULT STDMETHODCALLTYPE CNAntContextMenu::GetCommandString(
-	UINT idCmd, UINT uType, UINT * pwReserved, LPSTR pszName, UINT cchMax)
+	UINT_PTR idCmd, UINT uType, UINT * pwReserved, LPSTR pszName, UINT cchMax)
 {
 	LPWSTR pwszName = LPWSTR(pszName);
 	switch(uType)
@@ -406,17 +390,17 @@ HRESULT STDMETHODCALLTYPE CNAntContextMenu::GetCommandString(
 				idCmd < this->idCmdFirst + this->targetCount + 2 ?
 				S_OK : S_FALSE;
 
-		case GCS_HELPTEXTA:
-			return this->CopyHelpString(idCmd, strncpy_s, GetDescription, GetHelpA, pszName, cchMax);
+		case GCS_HELPTEXTA: //Ansi Help Text
+			return this->CopyHelpString(idCmd, StringCchCopyA, GetDescription, GetHelpA, pszName, cchMax);
 
 		case GCS_HELPTEXTW:
-			return this->CopyHelpString(idCmd, wcsncpy_s, GetDescription, GetHelpW, pwszName, cchMax);
+			return this->CopyHelpString(idCmd, StringCchCopyW, GetDescription, GetHelpW, pwszName, cchMax);
 
-		case GCS_VERBA:
-			return this->CopyHelpString(idCmd, strncpy_s, GetVerb, GetVerbA, pszName, cchMax);
+		case GCS_VERBA: //Ansi verb
+			return this->CopyHelpString(idCmd, StringCchCopyA, GetVerb, GetVerbA, pszName, cchMax);
 
 		case GCS_VERBW:
-			return this->CopyHelpString(idCmd, wcsncpy_s, GetVerb, GetVerbW, pwszName, cchMax);
+			return this->CopyHelpString(idCmd, StringCchCopyW, GetVerb, GetVerbW, pwszName, cchMax);
 	}
 	return E_FAIL;
 }
@@ -450,7 +434,7 @@ HRESULT STDMETHODCALLTYPE CNAntContextMenu::InvokeCommand(
 {
 	if (HIWORD(lpici->lpVerb))
 	{
-		MessageBox(0, lpici->lpVerb, __FUNCTION__, 0);//TODO:
+		//MessageBox(0, lpici->lpVerb, __FUNCTION__, 0);//TODO:
 	}
 	else
 	{
@@ -539,7 +523,8 @@ HRESULT STDMETHODCALLTYPE CNAntContextMenu::HandleMenuMsg2(UINT uMsg,
 	{
 		case WM_INITMENUPOPUP:
 			return NOERROR;
-
+        case  WM_MENUSELECT:
+             return NOERROR;
 		case WM_DRAWITEM:
 			return this->DrawItem(
 				HMENU(wParam), LPDRAWITEMSTRUCT(lParam));
@@ -551,6 +536,7 @@ HRESULT STDMETHODCALLTYPE CNAntContextMenu::HandleMenuMsg2(UINT uMsg,
 		case WM_MENUCHAR:
 			return this->OnMenuChar(
 				HMENU(lParam), LOWORD(wParam), HIWORD(wParam), *plResult);
+
 	}
 
 	wchar_t str[100];

@@ -22,7 +22,6 @@
  */
 
 #pragma once
-#define UNICODE=1
 
 #include <atlbase.h>
 
@@ -38,13 +37,13 @@ DEFINE_GUID(CLSID_CNAntContextMenu,
 
 struct CNAntTarget
 {
-	bstr_t name, desc;
+    bstr_t name, desc;
 };
 
 struct CNAntCommand
 {
-	LPCSTR strCaption, strVerb, strHelp;
-	LPCWSTR wcsCaption, wcsVerb, wcsHelp;
+    LPCSTR strCaption, strVerb, strHelp;
+    LPCWSTR wcsCaption, wcsVerb, wcsHelp;
 };
 
 class CNAntContextMenu :
@@ -54,88 +53,87 @@ public IContextMenu3,
 public IShellExtInit
 {
 private:
-	enum IdCmd
-	{
-		IdCmd_Edit,
-		IdCmd_Browse,
-		IdCmd_Shell,
-		IdCmd_Help,
-		IdCmd_Default,
-		IdCmd_Last
-	};
+    enum IdCmd
+    {
+        IdCmd_Edit,
+        IdCmd_Browse,
+        IdCmd_Shell,
+        IdCmd_Help,
+        IdCmd_Default,
+        IdCmd_Last
+    };
 
-	TCHAR filename[MAX_PATH];
-	CComPtr<IXMLDOMDocument> script;
+    TCHAR filename[MAX_PATH];
+    CComPtr<IXMLDOMDocument> script;
 
-	UINT idCmdFirst;
-	LONG targetCount;
-	CNAntTarget * targets;
-	CNAntTarget * defaultTarget;
+    UINT idCmdFirst;
+    LONG targetCount;
+    CNAntTarget * targets;
+    CNAntTarget * defaultTarget;
 
-	static CNAntCommand commands[IdCmd_Last];
-	HICON hIcons[IdCmd_Last];
+    static CNAntCommand commands[IdCmd_Last];
+    HICON hIcons[IdCmd_Last];
 
 protected:
-	HRESULT LoadScript(LPCTSTR filename);
-	HRESULT BuildTarget(const CNAntTarget & target);
+    HRESULT LoadScript(LPCTSTR filename);
+    HRESULT BuildTarget(const CNAntTarget & target);
 
-	template <class CharType>
-	HRESULT CopyHelpString(UINT idCmd,
-		CharType * (*copyFunc)(CharType *, const CharType *, UINT),
-		bstr_t (*targetFunc)(const CNAntTarget & target),
-		const CharType * (*sourceFunc)(const CNAntCommand & cmdInfo),
-		CharType * strBuf, UINT cchMax);
-	LPCTSTR GetMenuCaption(UINT itemId, HICON * hIcon = NULL);
+    template <class CharType>
+    HRESULT CopyHelpString(UINT idCmd,
+        HRESULT (*copyFunc)(CharType *, size_t, const CharType *),
+        bstr_t (*targetFunc)(const CNAntTarget & target),
+        const CharType * (*sourceFunc)(const CNAntCommand & cmdInfo),
+        CharType * strBuf, UINT cchMax);
 
-public:
-	CNAntContextMenu():
-		targetCount(0), targets(0), defaultTarget(0) {}
-
-	BEGIN_COM_MAP(CNAntContextMenu)
-		COM_INTERFACE_ENTRY(IShellExtInit)
-		COM_INTERFACE_ENTRY(IContextMenu3)
-		COM_INTERFACE_ENTRY(IContextMenu2)
-		COM_INTERFACE_ENTRY(IContextMenu)
-	END_COM_MAP()
-
-	DECLARE_NOT_AGGREGATABLE(CNAntContextMenu)
-
-	static HRESULT STDMETHODCALLTYPE UpdateRegistry(BOOL bRegister);
-
-	/////////////////////////////
-	// IShellExtInit
+    LPCTSTR GetMenuCaption(UINT itemId, HICON * hIcon = NULL);
 
 public:
-	STDMETHOD(Initialize)(LPCITEMIDLIST pidlFolder,
-		LPDATAOBJECT dataObject, HKEY hkeyProgID);
+    CNAntContextMenu():
+        targetCount(0), targets(0), defaultTarget(0) {}
 
-	/////////////////////////////
-	// IContextMenu
+    BEGIN_COM_MAP(CNAntContextMenu)
+        COM_INTERFACE_ENTRY(IShellExtInit)
+        COM_INTERFACE_ENTRY(IContextMenu3)
+        COM_INTERFACE_ENTRY(IContextMenu2)
+        COM_INTERFACE_ENTRY(IContextMenu)
+    END_COM_MAP()
+
+    DECLARE_NOT_AGGREGATABLE(CNAntContextMenu)
+
+    static HRESULT STDMETHODCALLTYPE UpdateRegistry(BOOL bRegister);
+
+    /////////////////////////////
+    // IShellExtInit
 
 public:
-	STDMETHOD(QueryContextMenu)(HMENU hMenu, UINT indexMenu,
-		UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
-  	STDMETHOD(InvokeCommand)(LPCMINVOKECOMMANDINFO lpici);
-  	STDMETHOD(GetCommandString)(UINT idCmd, UINT uType,
-		UINT * pwReserved, LPSTR pszName, UINT cchMax);
+    STDMETHOD(Initialize)(LPCITEMIDLIST pidlFolder,
+        LPDATAOBJECT dataObject, HKEY hkeyProgID);
 
-	/////////////////////////////
-	// IContextMenu2
+    /////////////////////////////
+    // IContextMenu
 
 public:
-	STDMETHOD(HandleMenuMsg)(UINT uMsg, WPARAM wParam, LPARAM lParam);
+    STDMETHOD(QueryContextMenu)(HMENU hMenu, UINT indexMenu,UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
+    STDMETHOD(InvokeCommand)(LPCMINVOKECOMMANDINFO lpici);
+    STDMETHOD(GetCommandString)(UINT_PTR idCmd, UINT uType,UINT * pwReserved, LPSTR pszName, UINT cchMax);
+
+    /////////////////////////////
+    // IContextMenu2
+
+public:
+    STDMETHOD(HandleMenuMsg)(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 private:
-	HRESULT DrawItem(HMENU hMenu, LPDRAWITEMSTRUCT pDrawItem);
-	HRESULT MeasureItem(HMENU hMenu, LPMEASUREITEMSTRUCT pMeasureItem);
+    HRESULT DrawItem(HMENU hMenu, LPDRAWITEMSTRUCT pDrawItem);
+    HRESULT MeasureItem(HMENU hMenu, LPMEASUREITEMSTRUCT pMeasureItem);
 
-	/////////////////////////////
-	// IContextMenu3
+    /////////////////////////////
+    // IContextMenu3
 
 public:
-	STDMETHOD(HandleMenuMsg2)(UINT uMsg,
-		WPARAM wParam, LPARAM lParam, LRESULT * plResult);
-	HRESULT OnMenuChar(HMENU hMenu, WORD type, WORD charcode, LRESULT & result);
+    STDMETHOD(HandleMenuMsg2)(UINT uMsg,
+        WPARAM wParam, LPARAM lParam, LRESULT * plResult);
+    HRESULT OnMenuChar(HMENU hMenu, WORD type, WORD charcode, LRESULT & result);
 };
 
 // vim:ts=4:sw=4
