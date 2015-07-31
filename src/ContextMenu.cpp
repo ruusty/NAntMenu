@@ -77,6 +77,9 @@ CNAntContextMenu::UpdateRegistry(BOOL bRegister)
 		return HRESULT_FROM_WIN32(GetLastError());
 	}
 
+    bstr_t nClass(bstr_t("CLSID\\") + clsid);
+    OutputDebugString(nClass);
+
 	if (bRegister)
 	{
 		//
@@ -84,8 +87,6 @@ CNAntContextMenu::UpdateRegistry(BOOL bRegister)
 		//
 		CRegKey rClass;
 		CRegKey rInProc;
-
-		bstr_t nClass(bstr_t("CLSID\\") + clsid);
 
 		if (Failed(rClass.Create(HKEY_CLASSES_ROOT, nClass)) ||
 			Failed(rClass.SetStringValue(NULL, L"NAntMenu Shell Extension")) ||
@@ -123,8 +124,46 @@ CNAntContextMenu::UpdateRegistry(BOOL bRegister)
 	}
 	else
 	{
-		MessageBox(0, L"Not implemented.", 0, 0); //TODO
-		return E_NOTIMPL;
+        //
+		// Unregister the file type
+		//
+
+		CRegKey rHKEY_CR;
+        rHKEY_CR.Attach(HKEY_CLASSES_ROOT); //Attach will assert if m_hKey is non-NULL.
+        if (
+            Failed(rHKEY_CR.DeleteSubKey(L".build"))              ||
+            Failed(rHKEY_CR.RecurseDeleteKey(L"NAntBuildScript"))
+           )
+        {
+			MessageBox(0, L"Unregister COM:Cannot Unregister file type.", 0, 0);
+			return HRESULT_FROM_WIN32(GetLastError());
+		}
+
+		//
+		// Unregister the COM object
+		//
+
+        bstr_t cClass(clsid);
+		CRegKey rClass;
+        OutputDebugString(nClass);
+        if (Failed(rClass.Open(HKEY_CLASSES_ROOT, nClass)))  {
+            MessageBox(0, L"Unregister COM: Cannot open GUID", 0, 0);
+            return HRESULT_FROM_WIN32(GetLastError());
+        }
+        if (Failed(rClass.DeleteSubKey (L"InprocServer32"))) {
+            MessageBox(0, L"Unregister COM: Cannot Delete InprocServer32", 0, 0);
+            return HRESULT_FROM_WIN32(GetLastError());
+        }
+
+        if (Failed(rClass.Open(HKEY_CLASSES_ROOT,L"CLSID"))) {
+            MessageBox(0, L"Unregister COM: Cannot Open  CLSID", 0, 0);
+            return HRESULT_FROM_WIN32(GetLastError());
+        }
+
+        if (Failed(rClass.DeleteSubKey(cClass))){
+            MessageBox(0, L"Unregister COM: Cannot delete  GUID", 0, 0);
+            return HRESULT_FROM_WIN32(GetLastError());
+        }
 	}
 
 	return S_OK;
@@ -429,12 +468,24 @@ HRESULT CNAntContextMenu::BuildTarget(const CNAntTarget & target)
 	return E_FAIL;
 }
 
-HRESULT STDMETHODCALLTYPE CNAntContextMenu::InvokeCommand(
-	LPCMINVOKECOMMANDINFO lpici)
+HRESULT STDMETHODCALLTYPE CNAntContextMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
 {
+    BOOL fEx = FALSE;
+    BOOL fUnicode = FALSE;
+	if(lpici->cbSize == sizeof(CMINVOKECOMMANDINFOEX))
+	{
+		fEx = TRUE;
+		if((lpici->fMask & CMIC_MASK_UNICODE))
+		{
+			fUnicode = TRUE;
+            OutputDebugString(L"Unicode");
+		}
+	}
+
 	if (HIWORD(lpici->lpVerb))
 	{
-		//MessageBox(0, lpici->lpVerb, __FUNCTION__, 0);//TODO:
+		MessageBox(0, lpici->lpVerb, L"__FUNCTION__", 0);//TODO:
+        OutputDebugStringA(lpici->lpVerb);
 	}
 	else
 	{
@@ -464,23 +515,17 @@ HRESULT STDMETHODCALLTYPE CNAntContextMenu::InvokeCommand(
 			switch(idCmd)
 			{
 				case IdCmd_Edit:
-					if (ShellExecute(NULL, T("edit"), this->filename,
-							NULL, NULL, SW_SHOWNORMAL))
-						return S_OK;
+					if (ShellExecute(NULL, T("edit"), this->filename,NULL, NULL, SW_SHOWNORMAL)) return S_OK;
 
 					return HRESULT_FROM_WIN32(GetLastError());
 
 				case IdCmd_Browse:
-					if (ShellExecute(NULL, T("open"), path,
-							NULL, NULL, SW_SHOWNORMAL))
-						return S_OK;
+					if (ShellExecute(NULL, T("open"), path,NULL, NULL, SW_SHOWNORMAL))return S_OK;
 
 					return HRESULT_FROM_WIN32(GetLastError());
 
 				case IdCmd_Shell:
-					if (ShellExecute(NULL, T("open"), T("cmd"),
-							NULL, path, SW_SHOWNORMAL))
-						return S_OK;
+					if (ShellExecute(NULL, T("open"), T("cmd"), NULL, path, SW_SHOWNORMAL))return S_OK;
 
 					return HRESULT_FROM_WIN32(GetLastError());
 
@@ -516,8 +561,7 @@ HRESULT STDMETHODCALLTYPE CNAntContextMenu::HandleMenuMsg(
 HRESULT STDMETHODCALLTYPE CNAntContextMenu::HandleMenuMsg2(UINT uMsg,
 	WPARAM wParam, LPARAM lParam, LRESULT * plResult)
 {
-	if (NULL == plResult)
-		return E_INVALIDARG;
+	if (NULL == plResult) return E_INVALIDARG;
 
 	switch(uMsg)
 	{
@@ -526,16 +570,13 @@ HRESULT STDMETHODCALLTYPE CNAntContextMenu::HandleMenuMsg2(UINT uMsg,
         case  WM_MENUSELECT:
              return NOERROR;
 		case WM_DRAWITEM:
-			return this->DrawItem(
-				HMENU(wParam), LPDRAWITEMSTRUCT(lParam));
+			return this->DrawItem(HMENU(wParam), LPDRAWITEMSTRUCT(lParam));
 
 		case WM_MEASUREITEM:
-			return this->MeasureItem(
-				HMENU(wParam), LPMEASUREITEMSTRUCT(lParam));
+			return this->MeasureItem(HMENU(wParam), LPMEASUREITEMSTRUCT(lParam));
 
 		case WM_MENUCHAR:
-			return this->OnMenuChar(
-				HMENU(lParam), LOWORD(wParam), HIWORD(wParam), *plResult);
+			return this->OnMenuChar(HMENU(lParam), LOWORD(wParam), HIWORD(wParam), *plResult);
 
 	}
 

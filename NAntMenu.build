@@ -88,9 +88,9 @@
  </target>
 
  <target name='compile' depends='prepare'>
-   <exec program='rc' commandline='/I"${w32inc}" /FO"${dllres}" "${dllrcs}"'/>
+   <exec program='rc' commandline='/I"${w32inc}" /FO"${dllres}" "${dllrcs}"' verbose="true"/>
 
-   <cl outputdir='${objdir}' options='/LD /I"${mfcinc}" /I"${w32inc}"'>
+   <cl outputdir='${objdir}' options='/LD /I"${mfcinc}" /I"${w32inc}"' verbose="true">
     <sources>
      <include name='${srcdir}\*.cpp'/>
     </sources>
