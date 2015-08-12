@@ -303,8 +303,7 @@ static  BOOL MenuItemSetDefault(HMENU hMenu, UINT uItem,
 }
 
 HRESULT STDMETHODCALLTYPE
-CNAntContextMenu::QueryContextMenu(HMENU hMenu, UINT indexMenu,
-	UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
+CNAntContextMenu::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
 {
 	if (!(uFlags & CMF_DEFAULTONLY))
 	{
@@ -316,8 +315,7 @@ CNAntContextMenu::QueryContextMenu(HMENU hMenu, UINT indexMenu,
 
 		while (first < last &&
 			AppendMenu(hPopup, MF_STRING, idCmdFirst, first->name) &&
-			MenuItemSetDefault(hPopup, idCmdFirst, FALSE,
-				first == this->defaultTarget))
+			MenuItemSetDefault(hPopup, idCmdFirst, FALSE, first == this->defaultTarget))
 		{
 			idCmdFirst++;
 			first++;
@@ -330,15 +328,14 @@ CNAntContextMenu::QueryContextMenu(HMENU hMenu, UINT indexMenu,
 		AppendMenu(hPopup, MF_SEPARATOR, 0, NULL);
 		AppendMenu(hPopup, MF_OWNERDRAW | MF_STRING, idCmdFirst++, T("&Help"));
 
-		if (!InsertMenu(hMenu, indexMenu,
-			 MF_BYPOSITION | MF_STRING | MF_POPUP,
-			 UINT_PTR(hPopup), T("NAnt")))
+		if (!InsertMenu(hMenu, indexMenu, MF_BYPOSITION | MF_STRING | MF_POPUP, UINT_PTR(hPopup), T("NAnt")))
 			return HRESULT_FROM_WIN32(GetLastError());
+        //SetMenuItemBitmaps(hMenu,idCmdFirst++, MF_BITMAP | MF_BYCOMMAND, this->hIcons[IdCmd_Default],this->hIcons[IdCmd_Default]);
+
 
 		if (this->defaultTarget)
 		{
-			bstr_t caption =
-				T("NAnt (") + this->defaultTarget->name + T(")");
+			bstr_t caption = T("NAnt (") + this->defaultTarget->name + T(")");
 
 			MENUITEMINFO itemInfo;
 
@@ -401,7 +398,6 @@ HRESULT CNAntContextMenu::CopyHelpString(UINT idCmd,
 	if (idCmd < this->targetCount)
 	{
         HRESULT hResult = copyFunc(strBuf, cchMax, targetFunc(this->targets[idCmd]));
-		//strBuf[cchMax - 1] = '\0';
 		return hResult;
 	}
 
@@ -410,7 +406,6 @@ HRESULT CNAntContextMenu::CopyHelpString(UINT idCmd,
 	if (idCmd < IdCmd_Last)
 	{
 		HRESULT hResult = copyFunc(strBuf,  cchMax, sourceFunc(commands[idCmd]));
-		//strBuf[cchMax - 1] = '\0';
 		return hResult;
 	}
 
@@ -459,8 +454,7 @@ HRESULT CNAntContextMenu::BuildTarget(const CNAntTarget & target)
 			" && nant -buildfile:\"" + filename + "\" " + target.name +
 			" && pause || pause";
 
-		ShellExecute(NULL, T("open"), T("cmd.exe"),
-			cmdline, path, SW_SHOWNORMAL);
+		ShellExecute(NULL, T("open"), T("cmd.exe"), cmdline, path, SW_SHOWNORMAL);
 
 		return S_OK;
 	}
@@ -482,14 +476,29 @@ HRESULT STDMETHODCALLTYPE CNAntContextMenu::InvokeCommand(LPCMINVOKECOMMANDINFO 
 		}
 	}
 
-	if (HIWORD(lpici->lpVerb))
+	if (!fUnicode && HIWORD(lpici->lpVerb))
 	{
-		MessageBox(0, lpici->lpVerb, L"__FUNCTION__", 0);//TODO:
+		MessageBoxA(0, lpici->lpVerb, "__FUNCTION__", 0);//TODO:
         OutputDebugStringA(lpici->lpVerb);
+        // If the verb is not recognized by the context menu handler, it
+		// must return E_FAIL to allow it to be passed on to the other
+		// context menu handlers that might implement that verb.
+		return E_FAIL;
 	}
+    // For the Unicode case, if the high-order word is not zero, the
+	// command's verb string is in lpcmi->lpVerbW.
+    else if(fUnicode && HIWORD(((CMINVOKECOMMANDINFOEX*)lpici)->lpVerbW))
+	{
+    		// If the verb is not recognized by the context menu handler, it
+			// must return E_FAIL to allow it to be passed on to the other
+			// context menu handlers that might implement that verb.
+            OutputDebugString(((CMINVOKECOMMANDINFOEX*)lpici)->lpVerbW);
+			return E_FAIL;
+    }
+    // If the command cannot be identified through the verb string, then
+	// check the identifier offset.
 	else
 	{
-		//UINT idCmd = LOWORD(lpici->lpVerb);
         LONG idCmd = LOWORD(lpici->lpVerb);
 
 		if (idCmd < this->targetCount)
@@ -525,16 +534,14 @@ HRESULT STDMETHODCALLTYPE CNAntContextMenu::InvokeCommand(LPCMINVOKECOMMANDINFO 
 					return HRESULT_FROM_WIN32(GetLastError());
 
 				case IdCmd_Shell:
-					if (ShellExecute(NULL, T("open"), T("cmd"), NULL, path, SW_SHOWNORMAL))return S_OK;
+					if (ShellExecute(NULL, T("open"), T("cmd.exe"), NULL, path, SW_SHOWNORMAL))return S_OK;
 
 					return HRESULT_FROM_WIN32(GetLastError());
 
 				case IdCmd_Help:
 					if (ExpandEnvironmentStrings(
-							T("%PROGRAMFILES%\\nant\\doc\\help\\index.html"),
-							path, sizeof(path)) &&
-						ShellExecute(NULL, T("open"), path,
-							NULL, NULL, SW_SHOWNORMAL))
+							T("%PROGRAMFILES%\\nant\\doc\\help\\index.html"),path, sizeof(path)) &&
+						ShellExecute(NULL, T("open"), path,NULL, NULL, SW_SHOWNORMAL))
 						return S_OK;
 
 					return HRESULT_FROM_WIN32(GetLastError());
@@ -612,8 +619,7 @@ LPCTSTR CNAntContextMenu::GetMenuCaption(UINT itemId, HICON * hIcon)
 HRESULT CNAntContextMenu::DrawItem(
 	HMENU hMenu, LPDRAWITEMSTRUCT pDrawItem)
 {
-	if (NULL == pDrawItem)
-		return E_INVALIDARG;
+	if (NULL == pDrawItem) return E_INVALIDARG;
 
 	if (pDrawItem->itemAction & (ODA_DRAWENTIRE | ODA_SELECT))
 	{
@@ -641,15 +647,12 @@ HRESULT CNAntContextMenu::DrawItem(
 		const DWORD wi = GetSystemMetrics(SM_CXSMICON);
 		const DWORD hi = GetSystemMetrics(SM_CYSMICON);
 
-		DrawIconEx(pDrawItem->hDC,
-			rc.left - 1, rc.top + (ha - hi) / 2,
-			hIcon, wi, hi, 0, NULL, DI_NORMAL | DI_COMPAT);
+		DrawIconEx(pDrawItem->hDC,rc.left - 1, rc.top + (ha - hi) / 2, hIcon, wi, hi, 0, NULL, DI_NORMAL | DI_COMPAT);
 		DeleteObject(bkBrush);
 
 		rc.left+= wi;
 
-		DrawText(pDrawItem->hDC, caption, -1, &rc,
-			DT_SINGLELINE | DT_LEFT | DT_VCENTER);
+		DrawText(pDrawItem->hDC, caption, -1, &rc, DT_SINGLELINE | DT_LEFT | DT_VCENTER);
 	}
 
 	return NOERROR;
