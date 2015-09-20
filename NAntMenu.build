@@ -77,12 +77,12 @@
   </zip>
  </target>
 
- <target name='register' depends='build'
+ <target name='register'
   description='Registers the NAntMenu shell extension'>
   <exec program='regsvr32' commandline='${output}'/>
  </target>
 
- <target name='unregister' depends='build'
+ <target name='unregister'
   description='Unregisters the NAntMenu shell extension'>
   <exec program='regsvr32' commandline='/u ${output}'/>
  </target>

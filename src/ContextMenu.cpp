@@ -90,7 +90,6 @@ CNAntContextMenu::UpdateRegistry(BOOL bRegister)
 
 		if (Failed(rClass.Create(HKEY_CLASSES_ROOT, nClass)) ||
 			Failed(rClass.SetStringValue(NULL, L"NAntMenu Shell Extension")) ||
-
 			Failed(rInProc.Create(rClass, L"InprocServer32")) ||
 			Failed(rInProc.SetStringValue(NULL, filename)) ||
 			Failed(rInProc.SetStringValue(L"ThreadingModel", L"Apartment")))
@@ -328,9 +327,14 @@ CNAntContextMenu::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst,
 		AppendMenu(hPopup, MF_SEPARATOR, 0, NULL);
 		AppendMenu(hPopup, MF_OWNERDRAW | MF_STRING, idCmdFirst++, T("&Help"));
 
+        HMODULE module = GetModuleHandle(MODULENAME);
+        HBITMAP bitimage = (HBITMAP)LoadBitmap( module,  L"nantbuild");
+
 		if (!InsertMenu(hMenu, indexMenu, MF_BYPOSITION | MF_STRING | MF_POPUP, UINT_PTR(hPopup), T("NAnt")))
 			return HRESULT_FROM_WIN32(GetLastError());
-        //SetMenuItemBitmaps(hMenu,idCmdFirst++, MF_BITMAP | MF_BYCOMMAND, this->hIcons[IdCmd_Default],this->hIcons[IdCmd_Default]);
+//FormatMessage
+        if (!SetMenuItemBitmaps(hMenu,indexMenu,  MF_BYPOSITION, bitimage, bitimage))
+        return HRESULT_FROM_WIN32(GetLastError());
 
 
 		if (this->defaultTarget)
@@ -528,8 +532,10 @@ HRESULT STDMETHODCALLTYPE CNAntContextMenu::InvokeCommand(LPCMINVOKECOMMANDINFO 
 
 					return HRESULT_FROM_WIN32(GetLastError());
 
-				case IdCmd_Browse:
-					if (ShellExecute(NULL, T("open"), path,NULL, NULL, SW_SHOWNORMAL))return S_OK;
+            case IdCmd_Browse:
+
+                    OutputDebugString(path);
+					if (ShellExecute(NULL, T("explore"), path, NULL, NULL, SW_SHOWNORMAL))return S_OK;
 
 					return HRESULT_FROM_WIN32(GetLastError());
 

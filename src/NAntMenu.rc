@@ -86,5 +86,6 @@ help ICON "..\\res\\help.ico"
 nantfile ICON "..\\res\\nantfile.ico"
 shell ICON "..\\res\\shell.ico"
 textfile ICON "..\\res\\textfile.ico"
+nantbuild BITMAP "..\\res\\nantbuild.bmp"
 
 
