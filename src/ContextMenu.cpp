@@ -456,7 +456,7 @@ HRESULT CNAntContextMenu::BuildTarget(const CNAntTarget & target)
 		bstr_t cmdline =
 			"/c title NAnt - " + target.name + " - " + filename +
 			" && nant -buildfile:\"" + filename + "\" " + target.name +
-			" && pause || pause";
+			" && timeout /t 30 || timeout /t 30";
 
 		ShellExecute(NULL, T("open"), T("cmd.exe"), cmdline, path, SW_SHOWNORMAL);
 
