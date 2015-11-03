@@ -30,6 +30,7 @@
 #include <comdef.h>
 #include <shlobj.h>
 #include <msxml2.h>
+#include <Shlwapi.h>
 
 //2A57BF13-CB2B-4769-B18C4133153F8D28
 DEFINE_GUID(CLSID_CNAntContextMenu,
@@ -77,7 +78,7 @@ private:
 protected:
     HRESULT LoadScript(LPCTSTR filename);
     HRESULT BuildTarget(const CNAntTarget & target);
-
+    HRESULT LaunchHelp();
     template <class CharType>
     HRESULT CopyHelpString(UINT idCmd,
         HRESULT (*copyFunc)(CharType *, size_t, const CharType *),

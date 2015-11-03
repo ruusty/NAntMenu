@@ -545,11 +545,7 @@ HRESULT STDMETHODCALLTYPE CNAntContextMenu::InvokeCommand(LPCMINVOKECOMMANDINFO 
 					return HRESULT_FROM_WIN32(GetLastError());
 
 				case IdCmd_Help:
-					if (ExpandEnvironmentStrings(
-							T("%PROGRAMFILES%\\nant\\doc\\help\\index.html"),path, sizeof(path)) &&
-						ShellExecute(NULL, T("open"), path,NULL, NULL, SW_SHOWNORMAL))
-						return S_OK;
-
+                    if (LaunchHelp()) return S_OK;
 					return HRESULT_FROM_WIN32(GetLastError());
 
 				case IdCmd_Default:
@@ -689,6 +685,68 @@ HRESULT CNAntContextMenu::OnMenuChar(
 {
 	result = MNC_IGNORE;
 	return NOERROR;
+}
+
+//Launch Help based on location of Nant.exe in PATH
+HRESULT CNAntContextMenu::LaunchHelp()
+{
+    LPTSTR pszPath=NULL;
+    DWORD   nSize = ExpandEnvironmentStrings(T("%PATH%"),NULL, 0);
+    pszPath = (LPTSTR)LocalAlloc(LPTR, nSize* sizeof(TCHAR));
+    LocalLock(pszPath);
+
+    if (ExpandEnvironmentStrings(T("%PATH%"),pszPath, nSize))
+    {
+#ifdef _DEBUG
+      OutputDebugString(pszPath);
+#endif
+      TCHAR seps[]   = T(";");
+      TCHAR *token;
+      TCHAR *next_token1 = NULL;
+      TCHAR nantexe[MAX_PATH];
+      TCHAR nantHelpPath[MAX_PATH];
+      BOOL isFound = FALSE;
+      /* Establish string and get the first token: */
+      token = wcstok_s( pszPath, seps, &next_token1 );
+      while ( token != NULL && (! isFound ))
+      {
+#ifdef _DEBUG
+         OutputDebugString(token);
+#endif
+         PathCombine(nantexe,token,T("nant.exe"));
+         if (PathFileExists(nantexe))
+         {
+             isFound=TRUE;
+#ifdef _DEBUG
+            OutputDebugString(nantexe);
+#endif
+            //therefor the help file is ..\doc\help\index.html
+            PathCombine(nantHelpPath,token,T("..\\doc\\help\\index.html"));
+#ifdef _DEBUG
+            OutputDebugString(nantHelpPath);
+#endif
+            if (PathFileExists(nantHelpPath))
+            {
+                OutputDebugString(nantHelpPath);
+                if (ShellExecute(NULL, T("open"), nantHelpPath,NULL, NULL, SW_SHOWNORMAL)) {
+                    pszPath=(LPTSTR)LocalFree(pszPath);
+                    return S_OK;
+                }
+                else
+                {
+                    DWORD retval=HRESULT_FROM_WIN32(GetLastError());
+                    pszPath=(LPTSTR)LocalFree(pszPath);
+                    return retval;
+                }
+            }
+         }
+         /* While there are tokens in "string" */
+         token = wcstok_s( NULL, seps, &next_token1);
+         /* Get next token: */
+      }
+    }
+    if (pszPath != NULL) pszPath =(LPTSTR)LocalFree(pszPath);
+    return S_FALSE;
 }
 
 // vim:ts=4:sw=4
