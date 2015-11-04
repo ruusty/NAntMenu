@@ -164,7 +164,7 @@ CNAntContextMenu::UpdateRegistry(BOOL bRegister)
             return HRESULT_FROM_WIN32(GetLastError());
         }
 	}
-
+    SHChangeNotify (SHCNE_ASSOCCHANGED,SHCNF_IDLIST, NULL,NULL);
 	return S_OK;
 }
 
