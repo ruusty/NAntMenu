@@ -1,9 +1,13 @@
+2015-11-05 Russell Holliday https://github.com/ruusty
 
-#define wcsncpy           wcsncpy_instead_use_wcsncpy_s_or_StringCchCpyNW_or_StringCbCpyNW
+=== NAntMenu V0.3 ===
 
-wcsncpy_s
-
-
+        * Updated README.txt to README.md
+        * Added LaunchHelp - locates and launches the help file based on location of Nant.exe in the PATH
+        * Changed Nant.exe invocation to pause with timeout /t 30
+        * Updated InvokeCommand for Unicode x64
+        * Added regsrv32 deregister
+        * Ported to x64 and Visual Studio 2013
 
 2003-05-16  Mathias Hasselmann  <mathias@taschenorakel.de>
 

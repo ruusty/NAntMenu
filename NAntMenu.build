@@ -2,7 +2,7 @@
 
 <!--
  ! Build script for the NAntMenu Shell Extension
- ! Copyrigth 2003 Mathias Hasselmann
+ ! Copyright 2003 Mathias Hasselmann
  !-->
 
 <project name='NAntMenu' default='rebuild'>
@@ -60,6 +60,8 @@
    comment='Sourcecode version of ${package} ${version}'>
    <fileset>
     <include name='*.txt'/>
+    <include name='README.md'/>
+    <include name='*.reg'/>
     <include name='*.build'/>
     <include name='${srcdir}/*'/>
     <include name='${resdir}/*'/>
@@ -72,6 +74,9 @@
    comment='Precompiled version of ${package} ${version}'>
    <fileset>
     <include name='*.txt'/>
+    <include name='README.md'/>
+    <include name='README.html'/>
+    <include name='*.reg'/>
     <include name='${bindir}/*'/>
    </fileset>
   </zip>

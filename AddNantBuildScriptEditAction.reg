@@ -1,0 +1,9 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_CLASSES_ROOT\NAntBuildScript\shell]
+
+[HKEY_CLASSES_ROOT\NAntBuildScript\shell\edit]
+
+# Change to your editor
+[HKEY_CLASSES_ROOT\NAntBuildScript\shell\edit\command]
+@="\"C:\\Program Files\\SlickEdit Pro 19.0.2\\win\\vs.exe\" \"%L\""
